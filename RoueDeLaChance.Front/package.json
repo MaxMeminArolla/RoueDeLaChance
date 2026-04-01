@@ -1,0 +1,13 @@
+{
+  "name": "rouedelachance.front",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "copy-static": "node copy-static.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

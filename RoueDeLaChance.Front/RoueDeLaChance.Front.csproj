@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- This is a build-only project, not a real .NET app -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);MSB4803</NoWarn>
+  </PropertyGroup>
+
+  <!-- Optional: Build front-end before project build (requires Node.js) -->
+  <!-- To enable: uncomment and ensure npm is in PATH -->
+  <!-- <Target Name="BuildFrontEnd" BeforeTargets="Build">
+    <Message Text="🔨 Building front-end with npm..." Importance="high" />
+    <Exec Command="cmd /c npm install" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
+    <Exec Command="cmd /c npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
+    <Exec Command="cmd /c npm run copy-static" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
+    <Message Text="✅ Front-end build complete" Importance="high" />
+  </Target> -->
+
+  <!-- Include npm files in Solution Explorer -->
+  <ItemGroup>
+    <None Include="package.json" />
+    <None Include="tsconfig.json" />
+    <None Include=".gitignore" />
+    <None Include="index.html" />
+    <None Include="README.md" />
+    <None Include="copy-static.js" />
+    <None Include="css\**" />
+    <None Include="src\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="css\" />
+    <Folder Include="src\" />
+  </ItemGroup>
+
+</Project>

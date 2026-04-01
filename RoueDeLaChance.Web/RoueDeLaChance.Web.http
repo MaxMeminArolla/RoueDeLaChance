@@ -1,0 +1,10 @@
+@RoueDeLaChance.Web_HostAddress = http://localhost:5285
+Accept: application/json
+
+### Get all prizes
+GET {{RoueDeLaChance.Web_HostAddress}}/prizes
+Accept: application/json
+
+### Spin the wheel
+POST {{RoueDeLaChance.Web_HostAddress}}/spin
+Accept: application/json

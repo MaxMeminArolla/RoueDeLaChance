@@ -1,0 +1,10 @@
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\RoueDeLaChance.Front.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\RoueDeLaChance.Front.csproj.CoreCompileInputs.cache
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\RoueDeLaChance.Front.sourcelink.json
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\bin\Debug\net10.0\RoueDeLaChance.Front.deps.json
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\bin\Debug\net10.0\RoueDeLaChance.Front.dll
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\bin\Debug\net10.0\RoueDeLaChance.Front.pdb
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\RoueDeLaChance.Front.dll
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\refint\RoueDeLaChance.Front.dll
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\RoueDeLaChance.Front.pdb
+C:\Users\Nuc Skull Canyon\source\repos\RoueDeLaChance\RoueDeLaChance\RoueDeLaChance.Front\obj\Debug\net10.0\ref\RoueDeLaChance.Front.dll

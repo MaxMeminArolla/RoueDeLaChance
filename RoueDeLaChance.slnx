@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="RoueDeLaChance.Core/RoueDeLaChance.Core.csproj" />
+  <Project Path="RoueDeLaChance.Front/RoueDeLaChance.Front.csproj" />
+  <Project Path="RoueDeLaChance.Tests/RoueDeLaChance.Tests.csproj" />
+  <Project Path="RoueDeLaChance.Web/RoueDeLaChance.Web.csproj" />
+</Solution>
