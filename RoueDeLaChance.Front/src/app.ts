@@ -1,6 +1,5 @@
 type Prize = {
   name: string;
-  quantity?: number;
   probability: number;
   color?: string;
 };
@@ -11,12 +10,14 @@ const AROLLA_PALETTE = [
 
 async function fetchPrizes(): Promise<Prize[]> {
   const res = await fetch("/prizes");
-  if (!res.ok) throw new Error(`Failed to fetch prizes: ${res.status}`);
+
+  if (!res.ok) throw new Error(`Problème lors de la récupération des lots: ${res.status}`);
+
   const arr = await res.json();
+
   return (arr || []).map((p: any, i: number) => ({
     name: (p.name ?? p.Name ?? `Lot ${i + 1}`) as string,
     probability: Number(p.probability ?? p.Probability ?? 0),
-    quantity: Number(p.quantity ?? p.Quantity ?? 0),
     color: p.color ?? AROLLA_PALETTE[i % AROLLA_PALETTE.length]
   }));
 }
@@ -116,11 +117,14 @@ function findSliceByName(prizeName: string): SliceMeta | undefined {
 }
 
 function computeRotationForSlice(s: SliceMeta): number {
+  // Le pointeur est en haut (12h), mais les arcs commencent à 0° (3h).
+  // On doit donc aligner la médiane du segment à 270°.
   const centerOfSlice = s.startDeg + s.sweepDeg / 2;
   const randomOffset = (Math.random() - 0.5) * Math.min(6, s.sweepDeg);
   const targetAngle = centerOfSlice + randomOffset;
+  const pointerAngle = 270; // position du marqueur fixe
   const fullRotations = 5;
-  return fullRotations * 360 + (360 - targetAngle);
+  return fullRotations * 360 + (pointerAngle - targetAngle);
 }
 
 async function doSpin(): Promise<void> {
@@ -151,7 +155,9 @@ async function doSpin(): Promise<void> {
 
     const onEnd = () => {
       canvas.removeEventListener("transitionend", onEnd);
-      const displayName = prizeName || (isWin ? "Gagné" : "Perdu");
+      const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
+
+      // Si le serveur répond un lot valide, on affiche ce lot, même si isWin est false.
       resultDiv.textContent = isWin
         ? `🎉 Vous avez gagné : ${displayName}`
         : `❌ Résultat : ${displayName}`;

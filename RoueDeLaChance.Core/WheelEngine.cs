@@ -28,27 +28,60 @@ namespace RoueDeLaChance.Core
                 throw new ArgumentNullException(nameof(prizes));
             }
 
-            var available = prizes.Where(p => p.Quantity > 0 && p.Probability > 0).ToList();
+            var available = prizes.Where(p => p.Probability > 0).ToList();
             if (!available.Any())
             {
-                return new SpinResult("Perdu", false);
+                return new SpinResult("Perdu", false, -1, ComputeTargetAngle(prizes, -1));
             }
 
-            var spinValue = _randomProvider.NextDouble();
+            var totalProbability = available.Sum(p => p.Probability);
+            var roll = _randomProvider.NextDouble() * totalProbability;
             var cumulative = 0.0;
-            foreach (var prize in available)
+
+            for (int i = 0; i < available.Count; i++)
             {
-                var sliceEnd = cumulative + prize.Probability;
-                if (spinValue < sliceEnd)
+                cumulative += available[i].Probability;
+                if (roll <= cumulative)
                 {
-                    prize.Quantity -= 1;
-                    return new SpinResult(prize.Name, true);
+                    var item = available[i];
+                    var isWin = !string.Equals(item.Name, "Perdu", StringComparison.OrdinalIgnoreCase);
+                    var prizeIndex = prizes.IndexOf(item);
+                    var angle = ComputeTargetAngle(prizes, prizeIndex);
+                    return new SpinResult(item.Name, isWin, prizeIndex, angle);
+                }
+            }
+
+            return new SpinResult("Perdu", false, -1, ComputeTargetAngle(prizes, -1));
+        }
+
+        private static double ComputeTargetAngle(IList<Prize> prizes, int prizeIndex)
+        {
+            const double pointerAngle = 270;
+            var total = prizes.Sum(p => p.Probability);
+            if (total <= 0)
+                total = prizes.Count;
+
+            var cumulative = 0.0;
+            for (int i = 0; i < prizes.Count; i++)
+            {
+                var sweep = (prizes[i].Probability / total) * 360;
+                if (double.IsNaN(sweep) || sweep <= 0)
+                {
+                    sweep = 360.0 / prizes.Count;
                 }
 
-                cumulative = sliceEnd;
+                if (i == prizeIndex)
+                {
+                    var center = cumulative + sweep / 2;
+                    var angle = ((pointerAngle - center) % 360 + 360) % 360;
+                    return angle;
+                }
+
+                cumulative += sweep;
             }
 
-            return new SpinResult("Perdu", false);
+            // Default Perdu if index invalid
+            return pointerAngle;
         }
     }
 
@@ -56,11 +89,15 @@ namespace RoueDeLaChance.Core
     {
         public string PrizeName { get; }
         public bool IsWin { get; }
+        public int PrizeIndex { get; }
+        public double Angle { get; }
 
-        public SpinResult(string prizeName, bool isWin)
+        public SpinResult(string prizeName, bool isWin, int prizeIndex, double angle)
         {
             PrizeName = prizeName;
             IsWin = isWin;
+            PrizeIndex = prizeIndex;
+            Angle = angle;
         }
     }
 }
