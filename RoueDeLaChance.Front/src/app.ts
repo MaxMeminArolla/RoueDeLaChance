@@ -76,7 +76,7 @@ function drawWheel(prizes: Prize[]): void {
     
     ctx.save();
     ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
-    ctx.rotate(mid + Math.PI / 2);
+    ctx.rotate(mid);
     ctx.fillStyle = "#fff";
     ctx.strokeStyle = "#0B2617";
     ctx.lineWidth = 3;
