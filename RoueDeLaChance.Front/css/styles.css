@@ -56,13 +56,13 @@ canvas {
   cursor: pointer;
   border: none;
   border-radius: 4px;
-  background: #0b3d91;
+  background: #0F3F18;
   color: white;
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 #spinBtn:hover:not(:disabled) {
-  background-color: #1d9dd3;
+  background-color: #92DF36;
 }
 
 #spinBtn:disabled {
