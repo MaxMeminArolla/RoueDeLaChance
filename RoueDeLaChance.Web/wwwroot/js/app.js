@@ -58,7 +58,7 @@ function drawWheel(prizes) {
         
         ctx.save();
         ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
-        ctx.rotate(mid - Math.PI / 2);
+        ctx.rotate(mid + Math.PI / 2);
         
         ctx.fillStyle = "#fff";
         ctx.strokeStyle = "#0B2617";
@@ -136,7 +136,7 @@ async function doSpin() {
             }
         }
         console.log("Final rotationTarget:", rotationTarget);
-        canvas.style.transition = "transform 5s cubic-bezier(.17,.67,.83,.67)";
+        canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
         canvas.style.transform = `rotate(${rotationTarget}deg)`;
         currentRotation = rotationTarget;
         const onEnd = () => {

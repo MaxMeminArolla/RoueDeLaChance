@@ -69,14 +69,19 @@ function drawWheel(prizes: Prize[]): void {
     ctx.stroke();
 
     // Draw label
+    const fontSize = sweep < 20 ? (sweep < 10 ? 9 : 11) : 14;
+    ctx.font = `bold ${fontSize}px Arial`;
     const mid = degToRad(startDeg + sweep / 2);
+    const labelR = sweep < 15 ? r * 0.82 : r * 0.75;
+    
     ctx.save();
-    ctx.translate(cx + Math.cos(mid) * r * 0.6, cy + Math.sin(mid) * r * 0.6);
-    ctx.rotate(mid);
+    ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
+    ctx.rotate(mid + Math.PI / 2);
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 14px Arial";
+    ctx.strokeStyle = "#0B2617";
+    ctx.lineWidth = 3;
     ctx.textAlign = "center";
-    wrapText(ctx, p.name, 0, 0, 110, 14);
+    wrapText(ctx, p.name, 0, 0, 100, fontSize);
     ctx.restore();
 
     slices.push({ startDeg, sweepDeg: sweep, prize: p });
@@ -101,6 +106,7 @@ function wrapText(
     const metrics = context.measureText(testLine);
 
     if (metrics.width > maxWidth && n > 0) {
+      context.strokeText(line, x, lineY);
       context.fillText(line, x, lineY);
       line = words[n] + " ";
       lineY += lineHeight;
@@ -109,6 +115,7 @@ function wrapText(
     }
   }
 
+  context.strokeText(line, x, lineY);
   context.fillText(line, x, lineY);
 }
 
@@ -116,15 +123,13 @@ function findSliceByName(prizeName: string): SliceMeta | undefined {
   return slices.find((s) => s.prize.name.toLowerCase() === prizeName.toLowerCase());
 }
 
-function computeRotationForSlice(s: SliceMeta): number {
-  // Le pointeur est en haut (12h), mais les arcs commencent à 0° (3h).
-  // On doit donc aligner la médiane du segment à 270°.
+function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
   const centerOfSlice = s.startDeg + s.sweepDeg / 2;
-  const randomOffset = (Math.random() - 0.5) * Math.min(6, s.sweepDeg);
-  const targetAngle = centerOfSlice + randomOffset;
   const pointerAngle = 270; // position du marqueur fixe
-  const fullRotations = 5;
-  return fullRotations * 360 + (pointerAngle - targetAngle);
+  const currentMod = startFrom % 360;
+  const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
+  const diff = (desiredMod - currentMod + 360) % 360;
+  return startFrom + (5 * 360) + diff;
 }
 
 async function doSpin(): Promise<void> {
@@ -140,17 +145,19 @@ async function doSpin(): Promise<void> {
     const prizeName = String(json.prizeName ?? json.PrizeName ?? json.prize ?? "");
 
     const slice = findSliceByName(prizeName);
-    let rotationTarget = 360 * 5 + Math.random() * 360;
+    let rotationTarget = currentRotation + (360 * 5) + Math.random() * 360;
 
     if (slice) {
-      rotationTarget = computeRotationForSlice(slice);
+      rotationTarget = computeRotationForSlice(slice, currentRotation);
     } else if (json.angle ?? json.Angle) {
       const serverAngle = Number(json.angle ?? json.Angle);
-      rotationTarget = 360 * 5 + serverAngle;
+      const currentMod = currentRotation % 360;
+      const diff = (serverAngle - currentMod + 360) % 360;
+      rotationTarget = currentRotation + (360 * 5) + diff;
     }
 
-    currentRotation = (currentRotation + rotationTarget) % 360000;
-    canvas.style.transition = "transform 5s cubic-bezier(.17,.67,.83,.67)";
+    currentRotation = rotationTarget;
+    canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
     canvas.style.transform = `rotate(${currentRotation}deg)`;
 
     const onEnd = () => {
