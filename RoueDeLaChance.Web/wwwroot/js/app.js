@@ -51,14 +51,20 @@ function drawWheel(prizes) {
         ctx.lineWidth = 2;
         ctx.stroke();
         // Draw label
+        const fontSize = sweep < 20 ? (sweep < 10 ? 9 : 11) : 14;
+        ctx.font = `bold ${fontSize}px Arial`;
         const mid = degToRad(startDeg + sweep / 2);
+        const labelR = sweep < 15 ? r * 0.82 : r * 0.75;
+        
         ctx.save();
-        ctx.translate(cx + Math.cos(mid) * r * 0.8, cy + Math.sin(mid) * r * 0.8);
+        ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
         ctx.rotate(mid - Math.PI / 2);
+        
         ctx.fillStyle = "#fff";
-        ctx.font = "bold 14px Arial";
+        ctx.strokeStyle = "#0B2617";
+        ctx.lineWidth = 3;
         ctx.textAlign = "center";
-        wrapText(ctx, p.name, 0, 0, 110, 14);
+        wrapText(ctx, p.name, 0, 0, 100, fontSize);
         ctx.restore();
         slices.push({ startDeg, sweepDeg: sweep, prize: p });
         start += sweep;
@@ -72,6 +78,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
         const testLine = line + words[n] + " ";
         const metrics = context.measureText(testLine);
         if (metrics.width > maxWidth && n > 0) {
+            context.strokeText(line, x, lineY);
             context.fillText(line, x, lineY);
             line = words[n] + " ";
             lineY += lineHeight;
@@ -80,17 +87,19 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
             line = testLine;
         }
     }
+    context.strokeText(line, x, lineY);
     context.fillText(line, x, lineY);
 }
 function findSliceByName(prizeName) {
     return slices.find((s) => s.prize.name.toLowerCase() === prizeName.toLowerCase());
 }
-function computeRotationForSlice(s) {
+function computeRotationForSlice(s, startFrom) {
     const centerOfSlice = s.startDeg + s.sweepDeg / 2;
     const pointerAngle = 270; // pointe vers le haut (12h)
-    const fullRotations = 5;
-    const diff = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
-    return fullRotations * 360 + diff;
+    const currentMod = startFrom % 360;
+    const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
+    const diff = (desiredMod - currentMod + 360) % 360;
+    return startFrom + (5 * 360) + diff;
 }
 async function doSpin() {
     var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -107,26 +116,29 @@ async function doSpin() {
         const prizeIndex = json.prizeIndex ?? json.PrizeIndex;
         const serverAngle = Number((_h = json.angle) !== null && _h !== void 0 ? _h : json.Angle);
         console.log("Parsed values - prizeName:", prizeName, "prizeIndex:", prizeIndex, "serverAngle:", serverAngle);
-        let rotationTarget = 360 * 5 + Math.random() * 360;
+        let rotationTarget = currentRotation + (360 * 5) + Math.random() * 360;
 
         if (!Number.isNaN(serverAngle) && serverAngle !== null && serverAngle !== undefined) {
             console.log("Using serverAngle:", serverAngle);
-            rotationTarget = 360 * 5 + serverAngle;
+            const currentMod = currentRotation % 360;
+            const diff = (serverAngle - currentMod + 360) % 360;
+            rotationTarget = currentRotation + (360 * 5) + diff;
         }
         else if (typeof prizeIndex === "number" && prizeIndex >= 0 && prizeIndex < slices.length) {
             console.log("Using prizeIndex:", prizeIndex);
-            rotationTarget = computeRotationForSlice(slices[prizeIndex]);
+            rotationTarget = computeRotationForSlice(slices[prizeIndex], currentRotation);
         }
         else {
             const slice = findSliceByName(prizeName);
             if (slice) {
                 console.log("Using findSliceByName:", prizeName);
-                rotationTarget = computeRotationForSlice(slice);
+                rotationTarget = computeRotationForSlice(slice, currentRotation);
             }
         }
         console.log("Final rotationTarget:", rotationTarget);
         canvas.style.transition = "transform 5s cubic-bezier(.17,.67,.83,.67)";
-        canvas.style.transform = `rotate(${currentRotation}deg)`;
+        canvas.style.transform = `rotate(${rotationTarget}deg)`;
+        currentRotation = rotationTarget;
         const onEnd = () => {
             canvas.removeEventListener("transitionend", onEnd);
             const displayName = prizeName || (isWin ? "Gagné" : "Perdu");
