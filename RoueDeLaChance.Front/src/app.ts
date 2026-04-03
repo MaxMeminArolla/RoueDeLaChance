@@ -34,35 +34,16 @@ const spinBtn = document.getElementById("spinBtn") as HTMLButtonElement;
 const resultDiv = document.getElementById("result")!;
 let slices: SliceMeta[] = [];
 let currentRotation = 0;
-let cachedPrizes: Prize[] = [];
 
 function degToRad(d: number): number {
   return (d * Math.PI) / 180;
 }
 
-function resizeCanvas(): void {
-  const container = canvas.parentElement;
-  if (!container) return;
-
-  const size = container.clientWidth;
-  if (canvas.width !== size || canvas.height !== size) {
-    canvas.width = size;
-    canvas.height = size;
-    if (cachedPrizes.length > 0) {
-      drawWheel(cachedPrizes);
-      // Maintenir la rotation actuelle lors du redimensionnement
-      canvas.style.transition = "none";
-      canvas.style.transform = `rotate(${currentRotation}deg)`;
-    }
-  }
-}
-
 function drawWheel(prizes: Prize[]): void {
-  cachedPrizes = prizes;
   const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
-  const r = Math.min(cx, cy) - 10; // Marge pour le bord
+  const r = Math.min(cx, cy) - 4;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   let start = 0;
@@ -83,19 +64,16 @@ function drawWheel(prizes: Prize[]): void {
     ctx.fill();
 
     // Draw border
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Draw label
-    // Taille de police proportionnelle au rayon pour garder la lisibilité
-    const baseFontSize = canvas.width > 400 ? 14 : 11;
-    const fontSize = sweep < 20 ? (sweep < 10 ? baseFontSize - 4 : baseFontSize - 2) : baseFontSize;
-    
+    const fontSize = sweep < 20 ? (sweep < 10 ? 9 : 11) : 14;
     ctx.font = `bold ${fontSize}px Arial`;
     const mid = degToRad(startDeg + sweep / 2);
-    const labelR = sweep < 15 ? r * 0.85 : r * 0.72;
-    
+    const labelR = sweep < 15 ? r * 0.82 : r * 0.75;
+
     ctx.save();
     ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
     ctx.rotate(mid);
@@ -103,7 +81,7 @@ function drawWheel(prizes: Prize[]): void {
     ctx.strokeStyle = "#0B2617";
     ctx.lineWidth = 3;
     ctx.textAlign = "center";
-    wrapText(ctx, p.name, 0, 0, r * 0.45, fontSize);
+    wrapText(ctx, p.name, 0, 0, 100, fontSize);
     ctx.restore();
 
     slices.push({ startDeg, sweepDeg: sweep, prize: p });
@@ -205,16 +183,12 @@ async function doSpin(): Promise<void> {
 async function loadAndDraw(): Promise<void> {
   try {
     const prizes = await fetchPrizes();
-    resizeCanvas();
     drawWheel(prizes);
   } catch (err) {
     resultDiv.textContent = "❌ Erreur lors du chargement.";
     console.error(err);
   }
 }
-
-// Listeners
-window.addEventListener("resize", resizeCanvas);
 
 spinBtn.addEventListener("click", () => {
   doSpin();
