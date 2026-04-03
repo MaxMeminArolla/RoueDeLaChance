@@ -5,14 +5,14 @@ const AROLLA_PALETTE = [
 async function fetchPrizes() {
     const res = await fetch("/prizes");
     if (!res.ok)
-        throw new Error(`Failed to fetch prizes: ${res.status}`);
+        throw new Error(`Problème lors de la récupération des lots: ${res.status}`);
     const arr = await res.json();
     return (arr || []).map((p, i) => {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e;
         return ({
             name: ((_b = (_a = p.name) !== null && _a !== void 0 ? _a : p.Name) !== null && _b !== void 0 ? _b : `Lot ${i + 1}`),
             probability: Number((_d = (_c = p.probability) !== null && _c !== void 0 ? _c : p.Probability) !== null && _d !== void 0 ? _d : 0),
-            color: (_g = p.color) !== null && _g !== void 0 ? _g : AROLLA_PALETTE[i % AROLLA_PALETTE.length]
+            color: (_e = p.color) !== null && _e !== void 0 ? _e : AROLLA_PALETTE[i % AROLLA_PALETTE.length]
         });
     });
 }
@@ -22,15 +22,33 @@ const spinBtn = document.getElementById("spinBtn");
 const resultDiv = document.getElementById("result");
 let slices = [];
 let currentRotation = 0;
+let cachedPrizes = [];
 function degToRad(d) {
     return (d * Math.PI) / 180;
 }
+function resizeCanvas() {
+    const container = canvas.parentElement;
+    if (!container)
+        return;
+    const size = container.clientWidth;
+    if (canvas.width !== size || canvas.height !== size) {
+        canvas.width = size;
+        canvas.height = size;
+        if (cachedPrizes.length > 0) {
+            drawWheel(cachedPrizes);
+            // Maintenir la rotation actuelle lors du redimensionnement
+            canvas.style.transition = "none";
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+        }
+    }
+}
 function drawWheel(prizes) {
     var _a;
+    cachedPrizes = prizes;
     const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const r = Math.min(cx, cy) - 4;
+    const r = Math.min(cx, cy) - 10; // Marge pour le bord
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let start = 0;
     slices = [];
@@ -47,24 +65,24 @@ function drawWheel(prizes) {
         ctx.closePath();
         ctx.fill();
         // Draw border
-        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
         ctx.lineWidth = 2;
         ctx.stroke();
         // Draw label
-        const fontSize = sweep < 20 ? (sweep < 10 ? 9 : 11) : 14;
+        // Taille de police proportionnelle au rayon pour garder la lisibilité
+        const baseFontSize = canvas.width > 400 ? 14 : 11;
+        const fontSize = sweep < 20 ? (sweep < 10 ? baseFontSize - 4 : baseFontSize - 2) : baseFontSize;
         ctx.font = `bold ${fontSize}px Arial`;
         const mid = degToRad(startDeg + sweep / 2);
-        const labelR = sweep < 15 ? r * 0.82 : r * 0.75;
-        
+        const labelR = sweep < 15 ? r * 0.85 : r * 0.72;
         ctx.save();
         ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
         ctx.rotate(mid);
-        
         ctx.fillStyle = "#fff";
         ctx.strokeStyle = "#0B2617";
         ctx.lineWidth = 3;
         ctx.textAlign = "center";
-        wrapText(ctx, p.name, 0, 0, 100, fontSize);
+        wrapText(ctx, p.name, 0, 0, r * 0.45, fontSize);
         ctx.restore();
         slices.push({ startDeg, sweepDeg: sweep, prize: p });
         start += sweep;
@@ -95,7 +113,7 @@ function findSliceByName(prizeName) {
 }
 function computeRotationForSlice(s, startFrom) {
     const centerOfSlice = s.startDeg + s.sweepDeg / 2;
-    const pointerAngle = 270; // pointe vers le haut (12h)
+    const pointerAngle = 270; // position du marqueur fixe
     const currentMod = startFrom % 360;
     const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
     const diff = (desiredMod - currentMod + 360) % 360;
@@ -110,38 +128,26 @@ async function doSpin() {
         if (!res.ok)
             throw new Error(`Spin failed: ${res.status}`);
         const json = await res.json();
-        console.log("Server response:", json);
         const isWin = (_b = (_a = json.isWin) !== null && _a !== void 0 ? _a : json.IsWin) !== null && _b !== void 0 ? _b : (((_c = json.prizeName) !== null && _c !== void 0 ? _c : json.PrizeName) ? true : false);
         const prizeName = String((_f = (_e = (_d = json.prizeName) !== null && _d !== void 0 ? _d : json.PrizeName) !== null && _e !== void 0 ? _e : json.prize) !== null && _f !== void 0 ? _f : "");
-        const prizeIndex = json.prizeIndex ?? json.PrizeIndex;
-        const serverAngle = Number((_h = json.angle) !== null && _h !== void 0 ? _h : json.Angle);
-        console.log("Parsed values - prizeName:", prizeName, "prizeIndex:", prizeIndex, "serverAngle:", serverAngle);
+        const slice = findSliceByName(prizeName);
         let rotationTarget = currentRotation + (360 * 5) + Math.random() * 360;
-
-        if (!Number.isNaN(serverAngle) && serverAngle !== null && serverAngle !== undefined) {
-            console.log("Using serverAngle:", serverAngle);
+        if (slice) {
+            rotationTarget = computeRotationForSlice(slice, currentRotation);
+        }
+        else if ((_g = json.angle) !== null && _g !== void 0 ? _g : json.Angle) {
+            const serverAngle = Number((_h = json.angle) !== null && _h !== void 0 ? _h : json.Angle);
             const currentMod = currentRotation % 360;
             const diff = (serverAngle - currentMod + 360) % 360;
             rotationTarget = currentRotation + (360 * 5) + diff;
         }
-        else if (typeof prizeIndex === "number" && prizeIndex >= 0 && prizeIndex < slices.length) {
-            console.log("Using prizeIndex:", prizeIndex);
-            rotationTarget = computeRotationForSlice(slices[prizeIndex], currentRotation);
-        }
-        else {
-            const slice = findSliceByName(prizeName);
-            if (slice) {
-                console.log("Using findSliceByName:", prizeName);
-                rotationTarget = computeRotationForSlice(slice, currentRotation);
-            }
-        }
-        console.log("Final rotationTarget:", rotationTarget);
-        canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
-        canvas.style.transform = `rotate(${rotationTarget}deg)`;
         currentRotation = rotationTarget;
+        canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
         const onEnd = () => {
             canvas.removeEventListener("transitionend", onEnd);
-            const displayName = prizeName || (isWin ? "Gagné" : "Perdu");
+            const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
+            // Si le serveur répond un lot valide, on affiche ce lot, même si isWin est false.
             resultDiv.textContent = isWin
                 ? `🎉 Vous avez gagné : ${displayName}`
                 : `❌ Résultat : ${displayName}`;
@@ -159,6 +165,7 @@ async function doSpin() {
 async function loadAndDraw() {
     try {
         const prizes = await fetchPrizes();
+        resizeCanvas();
         drawWheel(prizes);
     }
     catch (err) {
@@ -166,6 +173,8 @@ async function loadAndDraw() {
         console.error(err);
     }
 }
+// Listeners
+window.addEventListener("resize", resizeCanvas);
 spinBtn.addEventListener("click", () => {
     doSpin();
 });
