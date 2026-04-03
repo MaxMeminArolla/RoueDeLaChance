@@ -1,3 +1,5 @@
+import { lastCommitDate } from "./version.js";
+
 type Prize = {
   name: string;
   probability: number;
@@ -10,11 +12,8 @@ const AROLLA_PALETTE = [
 
 async function fetchPrizes(): Promise<Prize[]> {
   const res = await fetch("/prizes");
-
   if (!res.ok) throw new Error(`Problème lors de la récupération des lots: ${res.status}`);
-
   const arr = await res.json();
-
   return (arr || []).map((p: any, i: number) => ({
     name: (p.name ?? p.Name ?? `Lot ${i + 1}`) as string,
     probability: Number(p.probability ?? p.Probability ?? 0),
@@ -32,18 +31,41 @@ const canvas = document.getElementById("wheel") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 const spinBtn = document.getElementById("spinBtn") as HTMLButtonElement;
 const resultDiv = document.getElementById("result")!;
+const footer = document.getElementById("footer")!;
 let slices: SliceMeta[] = [];
 let currentRotation = 0;
+let cachedPrizes: Prize[] = [];
 
 function degToRad(d: number): number {
   return (d * Math.PI) / 180;
 }
 
+function resizeCanvas(): void {
+  const container = canvas.parentElement;
+  if (!container) return;
+
+  // On prend la taille réelle affichée. Si c'est trop petit (ex: 0 au chargement), on met un minimum.
+  const displaySize = Math.max(container.clientWidth, 300);
+  
+  if (canvas.width !== displaySize || canvas.height !== displaySize) {
+    canvas.width = displaySize;
+    canvas.height = displaySize;
+    
+    if (cachedPrizes.length > 0) {
+      drawWheel(cachedPrizes);
+      // Maintenir la rotation actuelle
+      canvas.style.transition = "none";
+      canvas.style.transform = `rotate(${currentRotation}deg)`;
+    }
+  }
+}
+
 function drawWheel(prizes: Prize[]): void {
+  cachedPrizes = prizes;
   const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
-  const r = Math.min(cx, cy) - 4;
+  const r = Math.min(cx, cy) - 10;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   let start = 0;
@@ -64,15 +86,16 @@ function drawWheel(prizes: Prize[]): void {
     ctx.fill();
 
     // Draw border
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Draw label
-    const fontSize = sweep < 20 ? (sweep < 10 ? 9 : 11) : 14;
+    const baseFontSize = canvas.width > 400 ? 14 : 11;
+    const fontSize = sweep < 20 ? (sweep < 10 ? baseFontSize - 4 : baseFontSize - 2) : baseFontSize;
     ctx.font = `bold ${fontSize}px Arial`;
     const mid = degToRad(startDeg + sweep / 2);
-    const labelR = sweep < 15 ? r * 0.82 : r * 0.75;
+    const labelR = sweep < 15 ? r * 0.85 : r * 0.72;
 
     ctx.save();
     ctx.translate(cx + Math.cos(mid) * labelR, cy + Math.sin(mid) * labelR);
@@ -81,7 +104,7 @@ function drawWheel(prizes: Prize[]): void {
     ctx.strokeStyle = "#0B2617";
     ctx.lineWidth = 3;
     ctx.textAlign = "center";
-    wrapText(ctx, p.name, 0, 0, 100, fontSize);
+    wrapText(ctx, p.name, 0, 0, r * 0.45, fontSize);
     ctx.restore();
 
     slices.push({ startDeg, sweepDeg: sweep, prize: p });
@@ -100,11 +123,9 @@ function wrapText(
   const words = text.split(" ");
   let line = "";
   let lineY = y;
-
   for (let n = 0; n < words.length; n++) {
     const testLine = line + words[n] + " ";
     const metrics = context.measureText(testLine);
-
     if (metrics.width > maxWidth && n > 0) {
       context.strokeText(line, x, lineY);
       context.fillText(line, x, lineY);
@@ -114,7 +135,6 @@ function wrapText(
       line = testLine;
     }
   }
-
   context.strokeText(line, x, lineY);
   context.fillText(line, x, lineY);
 }
@@ -125,7 +145,7 @@ function findSliceByName(prizeName: string): SliceMeta | undefined {
 
 function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
   const centerOfSlice = s.startDeg + s.sweepDeg / 2;
-  const pointerAngle = 270; // position du marqueur fixe
+  const pointerAngle = 270; 
   const currentMod = startFrom % 360;
   const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
   const diff = (desiredMod - currentMod + 360) % 360;
@@ -133,6 +153,7 @@ function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
 }
 
 async function doSpin(): Promise<void> {
+  if (spinBtn.disabled) return;
   spinBtn.disabled = true;
   resultDiv.textContent = "Tirage en cours...";
 
@@ -149,11 +170,6 @@ async function doSpin(): Promise<void> {
 
     if (slice) {
       rotationTarget = computeRotationForSlice(slice, currentRotation);
-    } else if (json.angle ?? json.Angle) {
-      const serverAngle = Number(json.angle ?? json.Angle);
-      const currentMod = currentRotation % 360;
-      const diff = (serverAngle - currentMod + 360) % 360;
-      rotationTarget = currentRotation + (360 * 5) + diff;
     }
 
     currentRotation = rotationTarget;
@@ -163,15 +179,12 @@ async function doSpin(): Promise<void> {
     const onEnd = () => {
       canvas.removeEventListener("transitionend", onEnd);
       const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
-
-      // Si le serveur répond un lot valide, on affiche ce lot, même si isWin est false.
       resultDiv.textContent = isWin
         ? `🎉 Vous avez gagné : ${displayName}`
         : `❌ Résultat : ${displayName}`;
       spinBtn.disabled = false;
       loadAndDraw();
     };
-
     canvas.addEventListener("transitionend", onEnd, { once: true });
   } catch (err) {
     resultDiv.textContent = "❌ Erreur lors du tirage.";
@@ -182,7 +195,9 @@ async function doSpin(): Promise<void> {
 
 async function loadAndDraw(): Promise<void> {
   try {
+    if (footer) footer.textContent = `dernier commit: ${lastCommitDate}`;
     const prizes = await fetchPrizes();
+    resizeCanvas();
     drawWheel(prizes);
   } catch (err) {
     resultDiv.textContent = "❌ Erreur lors du chargement.";
@@ -190,8 +205,8 @@ async function loadAndDraw(): Promise<void> {
   }
 }
 
-spinBtn.addEventListener("click", () => {
-  doSpin();
-});
+// Event Listeners
+window.addEventListener("resize", resizeCanvas);
+spinBtn.addEventListener("click", doSpin);
 
 loadAndDraw();

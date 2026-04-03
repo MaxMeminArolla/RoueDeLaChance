@@ -1,4 +1,4 @@
-"use strict";
+import { lastCommitDate } from "./version.js";
 const AROLLA_PALETTE = [
     "#0b3d91", "#1d9dd3", "#f2a400", "#e94b35", "#6ab04c", "#8e44ad"
 ];
@@ -20,6 +20,7 @@ const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 const spinBtn = document.getElementById("spinBtn");
 const resultDiv = document.getElementById("result");
+const footer = document.getElementById("footer");
 let slices = [];
 let currentRotation = 0;
 let cachedPrizes = [];
@@ -30,13 +31,14 @@ function resizeCanvas() {
     const container = canvas.parentElement;
     if (!container)
         return;
-    const size = container.clientWidth;
-    if (canvas.width !== size || canvas.height !== size) {
-        canvas.width = size;
-        canvas.height = size;
+    // On prend la taille réelle affichée. Si c'est trop petit (ex: 0 au chargement), on met un minimum.
+    const displaySize = Math.max(container.clientWidth, 300);
+    if (canvas.width !== displaySize || canvas.height !== displaySize) {
+        canvas.width = displaySize;
+        canvas.height = displaySize;
         if (cachedPrizes.length > 0) {
             drawWheel(cachedPrizes);
-            // Maintenir la rotation actuelle lors du redimensionnement
+            // Maintenir la rotation actuelle
             canvas.style.transition = "none";
             canvas.style.transform = `rotate(${currentRotation}deg)`;
         }
@@ -48,7 +50,7 @@ function drawWheel(prizes) {
     const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const r = Math.min(cx, cy) - 10; // Marge pour le bord
+    const r = Math.min(cx, cy) - 10;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let start = 0;
     slices = [];
@@ -69,7 +71,6 @@ function drawWheel(prizes) {
         ctx.lineWidth = 2;
         ctx.stroke();
         // Draw label
-        // Taille de police proportionnelle au rayon pour garder la lisibilité
         const baseFontSize = canvas.width > 400 ? 14 : 11;
         const fontSize = sweep < 20 ? (sweep < 10 ? baseFontSize - 4 : baseFontSize - 2) : baseFontSize;
         ctx.font = `bold ${fontSize}px Arial`;
@@ -113,14 +114,16 @@ function findSliceByName(prizeName) {
 }
 function computeRotationForSlice(s, startFrom) {
     const centerOfSlice = s.startDeg + s.sweepDeg / 2;
-    const pointerAngle = 270; // position du marqueur fixe
+    const pointerAngle = 270;
     const currentMod = startFrom % 360;
     const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
     const diff = (desiredMod - currentMod + 360) % 360;
     return startFrom + (5 * 360) + diff;
 }
 async function doSpin() {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f;
+    if (spinBtn.disabled)
+        return;
     spinBtn.disabled = true;
     resultDiv.textContent = "Tirage en cours...";
     try {
@@ -135,19 +138,12 @@ async function doSpin() {
         if (slice) {
             rotationTarget = computeRotationForSlice(slice, currentRotation);
         }
-        else if ((_g = json.angle) !== null && _g !== void 0 ? _g : json.Angle) {
-            const serverAngle = Number((_h = json.angle) !== null && _h !== void 0 ? _h : json.Angle);
-            const currentMod = currentRotation % 360;
-            const diff = (serverAngle - currentMod + 360) % 360;
-            rotationTarget = currentRotation + (360 * 5) + diff;
-        }
         currentRotation = rotationTarget;
         canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
         canvas.style.transform = `rotate(${currentRotation}deg)`;
         const onEnd = () => {
             canvas.removeEventListener("transitionend", onEnd);
             const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
-            // Si le serveur répond un lot valide, on affiche ce lot, même si isWin est false.
             resultDiv.textContent = isWin
                 ? `🎉 Vous avez gagné : ${displayName}`
                 : `❌ Résultat : ${displayName}`;
@@ -164,6 +160,8 @@ async function doSpin() {
 }
 async function loadAndDraw() {
     try {
+        if (footer)
+            footer.textContent = `dernier commit: ${lastCommitDate}`;
         const prizes = await fetchPrizes();
         resizeCanvas();
         drawWheel(prizes);
@@ -173,9 +171,7 @@ async function loadAndDraw() {
         console.error(err);
     }
 }
-// Listeners
+// Event Listeners
 window.addEventListener("resize", resizeCanvas);
-spinBtn.addEventListener("click", () => {
-    doSpin();
-});
+spinBtn.addEventListener("click", doSpin);
 loadAndDraw();

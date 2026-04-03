@@ -1,5 +1,5 @@
 :root {
-  --wheel-max-size: 600px;
+  --wheel-size: 600px;
   --pointer-size: 40px;
   --font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
@@ -14,7 +14,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 32px;
   background: #fafafa;
   color: #222;
   margin: 0;
@@ -25,13 +25,14 @@ main {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: var(--wheel-max-size);
 }
 
 #wheel-container {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: var(--wheel-size);
+  height: var(--wheel-size);
+  max-width: 90vw; /* Fix iPhone: la roue ne dépasse jamais 90% de la largeur */
+  max-height: 90vw;
   margin-bottom: 24px;
 }
 
@@ -55,26 +56,19 @@ canvas {
 }
 
 #spinBtn {
-  padding: 12px 48px;
-  font-size: 18px;
+  padding: 12px 32px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #0F3F18;
   color: white;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 #spinBtn:hover:not(:disabled) {
-  background-color: #1a6d2b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-#spinBtn:active:not(:disabled) {
-  transform: translateY(0);
+  background-color: #92DF36;
 }
 
 #spinBtn:disabled {
@@ -83,29 +77,43 @@ canvas {
 }
 
 #result {
-  margin-top: 24px;
-  min-height: 40px;
-  font-size: 18px;
+  margin-top: 20px;
+  min-height: 32px;
+  font-size: 16px;
   font-weight: 600;
   color: #0b3d91;
   text-align: center;
 }
 
-@media (max-width: 480px) {
+#footer {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  font-size: 10px;
+  color: #888;
+  font-family: monospace;
+}
+
+@media (max-width: 768px) {
   :root {
+    --wheel-size: 400px;
     --pointer-size: 30px;
   }
 
   body {
-    padding: 10px;
+    padding: 16px;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.5rem; /* Réduction du titre pour mobile */
+  }
+
+  #wheel-container {
+    margin-bottom: 16px;
   }
 
   #spinBtn {
-    width: 100%;
-    padding: 15px;
+    padding: 10px 24px;
+    font-size: 14px;
   }
 }

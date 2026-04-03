@@ -1,20 +1,17 @@
-#!/usr/bin/env pwsh
-
 # Build front-end
-Write-Host "🔨 Building front-end..." -ForegroundColor Cyan
-Push-Location "RoueDeLaChance.Front"
+Write-Host "Building front-end..."
 
-if (-Not (Test-Path "node_modules")) {
-    Write-Host "📦 Installing npm dependencies..." -ForegroundColor Yellow
-    npm install
-}
+# Extraction de la date Git de facon robuste
+$gitDate = git log -1 --format=%cd --date=format:"%d/%m/%Y %H:%M:%S"
+$versionPath = "RoueDeLaChance.Front/src/version.ts"
+$content = "export const lastCommitDate = '$gitDate';"
+Set-Content -Path $versionPath -Value $content -Encoding Utf8
 
-Write-Host "🏗️  Compiling TypeScript..." -ForegroundColor Yellow
+# Compilation et copie
+Set-Location "RoueDeLaChance.Front"
+if (-Not (Test-Path "node_modules")) { npm install }
 npm run build
-
-Write-Host "📁 Copying static files..." -ForegroundColor Yellow
 npm run copy-static
+Set-Location ".."
 
-Pop-Location
-
-Write-Host "✅ Front-end build complete!" -ForegroundColor Green
+Write-Host "Build Complete!"
