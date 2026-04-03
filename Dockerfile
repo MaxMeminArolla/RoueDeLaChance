@@ -38,6 +38,7 @@ COPY . .
 COPY --from=node-builder /src/RoueDeLaChance.Web/wwwroot ./RoueDeLaChance.Web/wwwroot
 
 # Build and publish for production
+RUN dotnet test RoueDeLaChance.Tests/RoueDeLaChance.Tests.csproj -c Release --no-restore
 RUN dotnet publish RoueDeLaChance.Web/RoueDeLaChance.Web.csproj -c Release -o /app/publish
 
 # --- STAGE 3: Runtime ---
