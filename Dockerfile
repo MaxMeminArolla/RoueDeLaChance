@@ -23,7 +23,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-builder
 WORKDIR /src
 
 # Copy solution and project files for restore
-COPY RoueDeLaChance.sln .
+COPY RoueDeLaChance.slnx .
 COPY RoueDeLaChance.Core/RoueDeLaChance.Core.csproj RoueDeLaChance.Core/
 COPY RoueDeLaChance.Web/RoueDeLaChance.Web.csproj RoueDeLaChance.Web/
 COPY RoueDeLaChance.Tests/RoueDeLaChance.Tests.csproj RoueDeLaChance.Tests/

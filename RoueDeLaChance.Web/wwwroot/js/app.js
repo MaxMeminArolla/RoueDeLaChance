@@ -146,6 +146,18 @@ async function doSpin() {
             resultDiv.textContent = isWin
                 ? `🎉 Vous avez gagné : ${displayName}`
                 : `❌ Résultat : ${displayName}`;
+            const historyList = document.getElementById("history-list");
+            if (historyList) {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('fr-FR');
+                const h = now.getHours().toString().padStart(2, '0');
+                const m = now.getMinutes().toString().padStart(2, '0');
+                const s = now.getSeconds().toString().padStart(2, '0');
+                const timeString = `${dateStr} ${h}h${m} et ${s}s`;
+                const li = document.createElement("li");
+                li.textContent = `${timeString}: résultat: ${displayName}`;
+                historyList.prepend(li);
+            }
             spinBtn.disabled = false;
             loadAndDraw();
         };

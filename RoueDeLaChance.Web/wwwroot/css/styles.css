@@ -11,20 +11,22 @@
 body {
   font-family: var(--font-family);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: row;
+  align-items: stretch;
   min-height: 100vh;
   padding: 32px;
   background: #fafafa;
   color: #222;
   margin: 0;
+  gap: 24px;
 }
 
 main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  justify-content: center;
+  flex: 1;
 }
 
 #wheel-container {
@@ -94,6 +96,53 @@ canvas {
   font-family: monospace;
 }
 
+#history-panel {
+  width: 30%;
+  min-width: 280px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 64px);
+  position: sticky;
+  top: 32px;
+}
+
+#history-panel h2 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  color: #000000;
+  text-align: center;
+}
+
+#history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto; /* Seul le contenu de la liste défile */
+  flex: 1;
+  padding-right: 8px; /* Espace pour la barre de défilement */
+}
+
+#history-list li {
+  padding: 10px 12px;
+  background: #fdfdfd;
+  border-left: 3px solid #000000;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  line-height: 1.4;
+}
+
 @media (max-width: 768px) {
   :root {
     --wheel-size: 400px;
@@ -101,7 +150,9 @@ canvas {
   }
 
   body {
+    flex-direction: column;
     padding: 16px;
+    align-items: center;
   }
 
   h1 {
@@ -115,5 +166,11 @@ canvas {
   #spinBtn {
     padding: 10px 24px;
     font-size: 14px;
+  }
+
+  #history-panel {
+    width: 100%;
+    max-height: 300px;
+    margin-top: 16px;
   }
 }
