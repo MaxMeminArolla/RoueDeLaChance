@@ -47,7 +47,6 @@ function resizeCanvas() {
 function drawWheel(prizes) {
     var _a;
     cachedPrizes = prizes;
-    const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
     const r = Math.min(cx, cy) - 10;
@@ -56,7 +55,7 @@ function drawWheel(prizes) {
     slices = [];
     for (let i = 0; i < prizes.length; i++) {
         const p = prizes[i];
-        const sweep = ((p.probability || 0) / total) * 360 || 360 / prizes.length;
+        const sweep = 360 / prizes.length;
         const startDeg = start;
         const endDeg = start + sweep;
         // Draw arc

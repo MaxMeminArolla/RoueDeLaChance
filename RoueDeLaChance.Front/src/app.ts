@@ -46,11 +46,11 @@ function resizeCanvas(): void {
 
   // On prend la taille réelle affichée. Si c'est trop petit (ex: 0 au chargement), on met un minimum.
   const displaySize = Math.max(container.clientWidth, 300);
-  
+
   if (canvas.width !== displaySize || canvas.height !== displaySize) {
     canvas.width = displaySize;
     canvas.height = displaySize;
-    
+
     if (cachedPrizes.length > 0) {
       drawWheel(cachedPrizes);
       // Maintenir la rotation actuelle
@@ -62,7 +62,6 @@ function resizeCanvas(): void {
 
 function drawWheel(prizes: Prize[]): void {
   cachedPrizes = prizes;
-  const total = prizes.reduce((s, p) => s + (p.probability || 0), 0) || prizes.length;
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   const r = Math.min(cx, cy) - 10;
@@ -73,7 +72,7 @@ function drawWheel(prizes: Prize[]): void {
 
   for (let i = 0; i < prizes.length; i++) {
     const p = prizes[i];
-    const sweep = ((p.probability || 0) / total) * 360 || 360 / prizes.length;
+    const sweep = 360 / prizes.length;
     const startDeg = start;
     const endDeg = start + sweep;
 
@@ -145,7 +144,7 @@ function findSliceByName(prizeName: string): SliceMeta | undefined {
 
 function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
   const centerOfSlice = s.startDeg + s.sweepDeg / 2;
-  const pointerAngle = 270; 
+  const pointerAngle = 270;
   const currentMod = startFrom % 360;
   const desiredMod = ((pointerAngle - centerOfSlice) % 360 + 360) % 360;
   const diff = (desiredMod - currentMod + 360) % 360;
