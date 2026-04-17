@@ -182,18 +182,8 @@ async function doSpin(): Promise<void> {
         ? `🎉 Vous avez gagné : ${displayName}`
         : `❌ Résultat : ${displayName}`;
         
-      const historyList = document.getElementById("history-list");
-      if (historyList) {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('fr-FR');
-        const h = now.getHours().toString().padStart(2, '0');
-        const m = now.getMinutes().toString().padStart(2, '0');
-        const s = now.getSeconds().toString().padStart(2, '0');
-        const timeString = `${dateStr} ${h}h${m} et ${s}s`;
-        const li = document.createElement("li");
-        li.textContent = `${timeString}: résultat: ${displayName}`;
-        historyList.prepend(li);
-      }
+      // Rafraîchit l'historique complet depuis le serveur (source de vérité partagée)
+      await loadHistory();
       
       spinBtn.disabled = false;
       loadAndDraw();
@@ -206,12 +196,34 @@ async function doSpin(): Promise<void> {
   }
 }
 
+async function loadHistory(): Promise<void> {
+  try {
+    const res = await fetch("/history");
+    if (!res.ok) return;
+    const entries: { prizeName: string; isWin: boolean; spunAt: string }[] = await res.json();
+
+    const historyList = document.getElementById("history-list");
+    if (!historyList) return;
+
+    historyList.innerHTML = "";
+    for (const entry of entries) {
+      const li = document.createElement("li");
+      const icon = entry.isWin ? "🎉" : "❌";
+      li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
+      historyList.appendChild(li);
+    }
+  } catch (err) {
+    console.error("Erreur chargement historique:", err);
+  }
+}
+
 async function loadAndDraw(): Promise<void> {
   try {
     if (footer) footer.textContent = `dernier commit: ${lastCommitDate}`;
     const prizes = await fetchPrizes();
     resizeCanvas();
     drawWheel(prizes);
+    await loadHistory();
   } catch (err) {
     resultDiv.textContent = "❌ Erreur lors du chargement.";
     console.error(err);

@@ -7,6 +7,10 @@ builder.Services.AddSingleton<IRandomNumberProvider, SystemRandomNumberProvider>
 builder.Services.AddTransient<WheelEngine>();
 builder.Services.AddOpenApi();
 
+// Fichier JSON d'historique stocké à côté de l'exécutable
+var historyFilePath = Path.Combine(AppContext.BaseDirectory, "spin-history.json");
+builder.Services.AddSingleton<ISpinHistoryService>(new SpinHistoryService(historyFilePath));
+
 var app = builder.Build();
 
 app.UseDefaultFiles();
@@ -23,11 +27,26 @@ app.MapGet("/prizes", (IPrizeProvider prizeProvider) =>
     return Results.Ok(prizes);
 });
 
-app.MapPost("/spin", (WheelEngine engine, IPrizeProvider prizeProvider) =>
+app.MapPost("/spin", async (WheelEngine engine, IPrizeProvider prizeProvider, ISpinHistoryService history) =>
 {
     var prizes = prizeProvider.GetPrizes();
     var result = engine.Spin(prizes);
+
+    var entry = new SpinEntry
+    {
+        PrizeName = result.PrizeName,
+        IsWin = result.IsWin,
+        SpunAt = DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")
+    };
+    await history.AddEntryAsync(entry);
+
     return Results.Ok(result);
+});
+
+app.MapGet("/history", async (ISpinHistoryService history) =>
+{
+    var entries = await history.GetAllEntriesAsync();
+    return Results.Ok(entries);
 });
 
 app.Run();
