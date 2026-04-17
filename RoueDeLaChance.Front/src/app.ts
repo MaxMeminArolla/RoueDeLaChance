@@ -175,7 +175,7 @@ async function doSpin(): Promise<void> {
     canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
     canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-    const onEnd = () => {
+    const onEnd = async () => {
       canvas.removeEventListener("transitionend", onEnd);
       const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
       resultDiv.textContent = isWin
@@ -186,7 +186,6 @@ async function doSpin(): Promise<void> {
       await loadHistory();
       
       spinBtn.disabled = false;
-      loadAndDraw();
     };
     canvas.addEventListener("transitionend", onEnd, { once: true });
   } catch (err) {

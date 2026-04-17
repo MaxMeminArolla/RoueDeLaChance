@@ -140,26 +140,15 @@ async function doSpin() {
         currentRotation = rotationTarget;
         canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
         canvas.style.transform = `rotate(${currentRotation}deg)`;
-        const onEnd = () => {
+        const onEnd = async () => {
             canvas.removeEventListener("transitionend", onEnd);
             const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
             resultDiv.textContent = isWin
                 ? `🎉 Vous avez gagné : ${displayName}`
                 : `❌ Résultat : ${displayName}`;
-            const historyList = document.getElementById("history-list");
-            if (historyList) {
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('fr-FR');
-                const h = now.getHours().toString().padStart(2, '0');
-                const m = now.getMinutes().toString().padStart(2, '0');
-                const s = now.getSeconds().toString().padStart(2, '0');
-                const timeString = `${dateStr} ${h}h${m} et ${s}s`;
-                const li = document.createElement("li");
-                li.textContent = `${timeString}: résultat: ${displayName}`;
-                historyList.prepend(li);
-            }
+            // Rafraîchit l'historique complet depuis le serveur (source de vérité partagée)
+            await loadHistory();
             spinBtn.disabled = false;
-            loadAndDraw();
         };
         canvas.addEventListener("transitionend", onEnd, { once: true });
     }
@@ -169,6 +158,27 @@ async function doSpin() {
         console.error(err);
     }
 }
+async function loadHistory() {
+    try {
+        const res = await fetch("/history");
+        if (!res.ok)
+            return;
+        const entries = await res.json();
+        const historyList = document.getElementById("history-list");
+        if (!historyList)
+            return;
+        historyList.innerHTML = "";
+        for (const entry of entries) {
+            const li = document.createElement("li");
+            const icon = entry.isWin ? "🎉" : "❌";
+            li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
+            historyList.appendChild(li);
+        }
+    }
+    catch (err) {
+        console.error("Erreur chargement historique:", err);
+    }
+}
 async function loadAndDraw() {
     try {
         if (footer)
@@ -176,6 +186,7 @@ async function loadAndDraw() {
         const prizes = await fetchPrizes();
         resizeCanvas();
         drawWheel(prizes);
+        await loadHistory();
     }
     catch (err) {
         resultDiv.textContent = "❌ Erreur lors du chargement.";
