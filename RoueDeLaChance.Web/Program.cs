@@ -2,6 +2,7 @@ using RoueDeLaChance.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<PrizeSettings>(builder.Configuration.GetSection("PrizeSettings"));
 builder.Services.AddSingleton<IPrizeProvider, ConfigurationPrizeProvider>();
 builder.Services.AddSingleton<IRandomNumberProvider, SystemRandomNumberProvider>();
 builder.Services.AddTransient<WheelEngine>();

@@ -22,10 +22,11 @@ async function fetchPrizes(): Promise<Prize[]> {
 
   // Validation de la somme des probabilités
   const total = prizes.reduce((sum: number, p: Prize) => sum + p.probability, 0);
-  if (Math.abs(total - 1) > 0.0001) {
+  if (Math.abs(total - 1) > 0.00001) {
+    console.log(`Attention: La somme des probabilités est de ${total.toFixed(4)} au lieu de 1.0000`, prizes);
     showToast(`Attention: La somme des probabilités est de ${total.toFixed(4)} au lieu de 1.0000`, 'error');
   }
-
+  console.log("Tout va bien...sur Prizes", prizes);
   return prizes;
 }
 
