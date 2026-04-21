@@ -57,6 +57,27 @@ canvas {
   display: block;
 }
 
+#controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#emailInput {
+  padding: 10px 16px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  width: 250px;
+  transition: border-color 0.2s;
+}
+
+#emailInput:focus {
+  outline: none;
+  border-color: #0F3F18;
+}
+
 #spinBtn {
   padding: 12px 32px;
   font-size: 16px;

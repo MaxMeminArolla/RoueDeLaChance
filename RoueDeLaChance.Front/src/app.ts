@@ -69,6 +69,7 @@ interface SliceMeta {
 const canvas = document.getElementById("wheel") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 const spinBtn = document.getElementById("spinBtn") as HTMLButtonElement;
+const emailInput = document.getElementById("emailInput") as HTMLInputElement;
 const resultDiv = document.getElementById("result")!;
 const footer = document.getElementById("footer")!;
 let slices: SliceMeta[] = [];
@@ -242,7 +243,12 @@ async function doSpin(): Promise<void> {
   resultDiv.textContent = "Tirage en cours...";
 
   try {
-    const res = await fetch("/spin", { method: "POST" });
+    const email = emailInput.value.trim();
+    const res = await fetch("/spin", { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
     if (!res.ok) throw new Error(`Spin failed: ${res.status}`);
 
     const json = await res.json();
@@ -270,7 +276,9 @@ async function doSpin(): Promise<void> {
       // Rafraîchit l'historique complet depuis le serveur (source de vérité partagée)
       await loadHistory();
 
-      spinBtn.disabled = false;
+      // Effacer l'email et désactiver le bouton pour une nouvelle saisie
+      emailInput.value = "";
+      spinBtn.disabled = true;
     };
     canvas.addEventListener("transitionend", onEnd, { once: true });
   } catch (err) {
@@ -293,8 +301,17 @@ async function loadAndDraw(): Promise<void> {
   }
 }
 
+// Validation email
+function validateEmail(): void {
+  const email = emailInput.value;
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isValid = re.test(email);
+  spinBtn.disabled = !isValid;
+}
+
 // Event Listeners
 window.addEventListener("resize", resizeCanvas);
 spinBtn.addEventListener("click", doSpin);
+emailInput.addEventListener("input", validateEmail);
 
 loadAndDraw();

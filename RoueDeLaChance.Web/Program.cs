@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using RoueDeLaChance.Core;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,7 +28,7 @@ app.MapGet("/prizes", (IPrizeProvider prizeProvider) =>
     return Results.Ok(prizes);
 });
 
-app.MapPost("/spin", async (WheelEngine engine, IPrizeProvider prizeProvider, ISpinHistoryService history) =>
+app.MapPost("/spin", async (SpinRequest request, WheelEngine engine, IPrizeProvider prizeProvider, ISpinHistoryService history) =>
 {
     var prizes = prizeProvider.GetPrizes();
     var result = engine.Spin(prizes);
@@ -42,6 +41,11 @@ app.MapPost("/spin", async (WheelEngine engine, IPrizeProvider prizeProvider, IS
     };
     await history.AddEntryAsync(entry);
 
+    // Enregistrement dans le fichier CSV (même niveau que l'historique JSON)
+    var csvPath = Path.Combine(AppContext.BaseDirectory, "spins-export.csv");
+    var csvLine = $"{DateTime.Now:yyyyMMddHHmmssfff};{request.Email};{result.PrizeName}{Environment.NewLine}";
+    await File.AppendAllTextAsync(csvPath, csvLine);
+
     return Results.Ok(result);
 });
 
@@ -51,4 +55,17 @@ app.MapGet("/history", async (ISpinHistoryService history) =>
     return Results.Ok(entries);
 });
 
+app.MapGet("/csv", async () =>
+{
+    var csvPath = Path.Combine(AppContext.BaseDirectory, "spins-export.csv");
+    if (!File.Exists(csvPath))
+    {
+        return Results.NotFound("Le fichier CSV est vide ou inexistant.");
+    }
+    var content = await File.ReadAllTextAsync(csvPath);
+    return Results.Text(content, "text/plain", System.Text.Encoding.UTF8);
+});
+
 app.Run();
+
+record SpinRequest(string Email);

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 using RoueDeLaChance.Core;
 
 namespace RoueDeLaChance.Tests;
@@ -52,16 +51,14 @@ public class WheelEngineTests
 
 public class ConfigurationPrizeProvider(IConfiguration configuration) : IPrizeProvider
 {
-    private readonly IOptionsMonitor<PrizeSettings>? _optionsMonitor;
     private readonly PrizeSettings? _settings = configuration.Get<PrizeSettings>();
 
     public IList<Prize> GetPrizes()
     {
-        var settings = _optionsMonitor?.CurrentValue ?? _settings;
-        if (settings?.Prizes == null)
+        if (_settings?.Prizes == null)
         {
             return [];
         }
-        return settings.Prizes;
+        return _settings.Prizes;
     }
 }
