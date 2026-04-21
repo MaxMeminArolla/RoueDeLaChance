@@ -1,4 +1,4 @@
-# 🎡 Roue de la Chance - v2.0
+# 🎡 Roue de la Chance
 
 Une application de tirage au sort avec une roue dynamique (courbe de Béziers), un journal des gains en temps réel et un back-end .NET 10.
 
@@ -23,9 +23,13 @@ graph LR
 
 ## ✨ Nouveautés Majeures
 
-> **Parts Équidistantes** : Désormais, toutes les parts de la roue ont la même taille visuelle, indépendamment de leur probabilité réelle.
+> **Parts Équidistantes** : Les parts de la roue affichent toutes la même taille visuelle pour une meilleure esthétique, indépendamment de leurs probabilités réelles.
 
-> **Journal Historique** : Un panneau latéral noir (30% de l'écran) suit désormais chaque tirage avec l'heure exacte et le résultat.
+> **Saisie d'Email & Compteurs en Direct** : L'interface intègre désormais des compteurs visuels des lots restants et nécessite la saisie d'un e-mail avant chaque tirage.
+
+> **Journal Historique** : Un panneau latéral noir suit désormais chaque résultat de tirage (gagné ou perdu) en temps réel avec l'heure associée.
+
+> **Export CSV Direct (`/csv`)** : Tous les tirages (avec date précise `yyyyMMddHHmmssfff`, e-mail et résultat) s'enregistrent dans un export CSV. Ce fichier est consultable directement en texte brut depuis le navigateur via l'adresse `http://<serveur>/csv` !
 
 ---
 
@@ -41,30 +45,19 @@ dotnet run -p RoueDeLaChance.Web
 ```
 
 ### 🐳 Déploiement Docker (Production)
-Pour mettre à jour votre serveur après un `git pull` :
+Un script Bash automatisé a été créé pour simplifier les mises à jour régulières (`git pull` et reset Docker).
 
+Pour redéployer la toute dernière version de GitHub depuis votre serveur :
 ```bash
-# Reconstruction de l'image (bien noter le '.')
-docker build -t roue-chance .
-
-# Nettoyage si disque plein
-docker system prune -a
-
-# Relance du conteneur
-docker stop MaRoue ; docker rm MaRoue
-docker run -d --name MaRoue --restart always -p 8080:8080 roue-chance
+./deploy.sh
 ```
 
----
 
 ## 🎨 Personnalisation
 
 | Fichier | Rôle |
 | :--- | :--- |
-| `RoueDeLaChance.Web/appsettings.json` | Modifier les **lots**, probabilités et quantités. |
-| `RoueDeLaChance.Front/src/app.ts` | Modifier la **palette de couleurs** (AROLLA_PALETTE). |
-| `RoueDeLaChance.Front/css/styles.css` | Changer le **design** (largeur journal, bordures, etc). |
+| `RoueDeLaChance.Web/appsettings.json` | Modifier les **lots**, probabilités et quantités.
 
----
 
 > Stack : .NET 10 + TypeScript + Canvas + Docker
