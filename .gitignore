@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # Ce fichier .gitignore a été automatiquement créé par Microsoft(R) Visual Studio.
 ################################################################################
 
@@ -15,4 +15,4 @@
 /RoueDeLaChance.Front/obj/Debug/net10.0/RoueDeLaChance.Front.pdb
 /RoueDeLaChance.Front/obj/Debug/net10.0/RoueDeLaChance.Front.sourcelink.json
 RoueDeLaChance.Front/obj/project.nuget.cache
-/RoueDeLaChance.Web/wwwroot
+RoueDeLaChance.Web/wwwroot/
