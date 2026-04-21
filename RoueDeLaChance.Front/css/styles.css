@@ -96,6 +96,19 @@ canvas {
   font-family: monospace;
 }
 
+#counters {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  font-size: 10px;
+  color: #888;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+}
+
 #history-panel {
   width: 30%;
   min-width: 280px;
