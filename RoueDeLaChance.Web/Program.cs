@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using RoueDeLaChance.Core;
 
 var builder = WebApplication.CreateBuilder(args);

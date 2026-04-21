@@ -1,15 +1,14 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RoueDeLaChance.Core;
 
 namespace RoueDeLaChance.Tests;
 
 public class WheelEngineTests
 {
-    private class StubRandomNumberProvider : IRandomNumberProvider
+    private class StubRandomNumberProvider(IEnumerable<double> values) : IRandomNumberProvider
     {
-        private readonly Queue<double> _values;
-
-        public StubRandomNumberProvider(IEnumerable<double> values) => _values = new Queue<double>(values);
+        private readonly Queue<double> _values = new(values);
 
         public double NextDouble() => _values.Dequeue();
     }
@@ -48,5 +47,21 @@ public class WheelEngineTests
 
         // Utilisation d'une tolérance (epsilon) pour les calculs en virgule flottante
         Assert.InRange(total, 0.9999999999, 1.0000000001);
+    }
+}
+
+public class ConfigurationPrizeProvider(IConfiguration configuration) : IPrizeProvider
+{
+    private readonly IOptionsMonitor<PrizeSettings>? _optionsMonitor;
+    private readonly PrizeSettings? _settings = configuration.Get<PrizeSettings>();
+
+    public IList<Prize> GetPrizes()
+    {
+        var settings = _optionsMonitor?.CurrentValue ?? _settings;
+        if (settings?.Prizes == null)
+        {
+            return [];
+        }
+        return settings.Prizes;
     }
 }

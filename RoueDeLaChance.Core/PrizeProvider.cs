@@ -1,6 +1,5 @@
-using System.Linq;
 using Microsoft.Extensions.Options;
-using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace RoueDeLaChance.Core
 {
@@ -11,22 +10,28 @@ namespace RoueDeLaChance.Core
 
     public class ConfigurationPrizeProvider : IPrizeProvider
     {
-        private readonly IOptionsMonitor<PrizeSettings> _optionsMonitor;
+        private readonly IOptionsMonitor<PrizeSettings>? _optionsMonitor;
+        private readonly PrizeSettings? _settings;
 
         public ConfigurationPrizeProvider(IOptionsMonitor<PrizeSettings> optionsMonitor)
         {
             _optionsMonitor = optionsMonitor;
         }
 
+        // New constructor to support IConfiguration directly (useful for tests)
+        ConfigurationPrizeProvider(IConfiguration configuration)
+        {
+            _settings = configuration.Get<PrizeSettings>();
+        }
+
         public IList<Prize> GetPrizes()
         {
-            var settings = _optionsMonitor.CurrentValue;
-            if (settings.Prizes == null)
+            var settings = _optionsMonitor?.CurrentValue ?? _settings;
+            if (settings?.Prizes == null)
             {
-                return new List<Prize>();
+                return [];
             }
-
-            return new List<Prize>(settings.Prizes);
+            return settings.Prizes;
         }
     }
 }

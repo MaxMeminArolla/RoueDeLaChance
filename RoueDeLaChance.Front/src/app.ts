@@ -190,11 +190,36 @@ function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
   return startFrom + (5 * 360) + diff;
 }
 
+async function updateCounters(entries: { prizeName: string; isWin: boolean }[]): Promise<void> {
+  const countersDiv = document.getElementById("counters");
+  if (!countersDiv) return;
+
+  const counts: Record<string, number> = {};
+  for (const entry of entries) {
+    const name = entry.prizeName;
+    if (name.toLowerCase() !== "perdu") {
+      counts[name] = (counts[name] || 0) + 1;
+    }
+  }
+
+  countersDiv.innerHTML = "";
+  // Trier par nom pour la stabilité de l'affichage
+  const sortedNames = Object.keys(counts).sort();
+  for (const name of sortedNames) {
+    const div = document.createElement("div");
+    div.textContent = `${name}: ${counts[name]}`;
+    countersDiv.appendChild(div);
+  }
+}
+
 async function loadHistory(): Promise<void> {
   try {
     const res = await fetch("/history");
     if (!res.ok) return;
     const entries: { prizeName: string; isWin: boolean; spunAt: string }[] = await res.json();
+
+    // Mise à jour des compteurs
+    await updateCounters(entries);
 
     const historyList = document.getElementById("history-list");
     if (!historyList) return;

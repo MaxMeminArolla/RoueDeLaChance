@@ -15,20 +15,14 @@ namespace RoueDeLaChance.Core
         Task<IReadOnlyList<SpinEntry>> GetAllEntriesAsync();
     }
 
-    public class SpinHistoryService : ISpinHistoryService
+    public class SpinHistoryService(string filePath) : ISpinHistoryService
     {
-        private readonly string _filePath;
         private static readonly SemaphoreSlim _lock = new(1, 1);
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             WriteIndented = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-
-        public SpinHistoryService(string filePath)
-        {
-            _filePath = filePath;
-        }
 
         public async Task AddEntryAsync(SpinEntry entry)
         {
@@ -60,18 +54,18 @@ namespace RoueDeLaChance.Core
 
         private async Task<List<SpinEntry>> ReadFromDiskAsync()
         {
-            if (!File.Exists(_filePath))
-                return new List<SpinEntry>();
+            if (!File.Exists(filePath))
+                return [];
 
-            var json = await File.ReadAllTextAsync(_filePath);
+            var json = await File.ReadAllTextAsync(filePath);
             return JsonSerializer.Deserialize<List<SpinEntry>>(json, _jsonOptions)
-                   ?? new List<SpinEntry>();
+                   ?? [];
         }
 
         private async Task WriteToDiskAsync(List<SpinEntry> entries)
         {
             var json = JsonSerializer.Serialize(entries, _jsonOptions);
-            await File.WriteAllTextAsync(_filePath, json);
+            await File.WriteAllTextAsync(filePath, json);
         }
     }
 }
