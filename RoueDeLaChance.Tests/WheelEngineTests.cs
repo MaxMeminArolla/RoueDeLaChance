@@ -51,13 +51,13 @@ public class WheelEngineTests
 
 public class ConfigurationPrizeProvider(IConfiguration configuration) : IPrizeProvider
 {
-    private readonly PrizeSettings? _settings = configuration.Get<PrizeSettings>();
+    private readonly PrizeSettings? _settings = configuration.GetSection("PrizeSettings").Get<PrizeSettings>();
 
     public IList<Prize> GetPrizes()
     {
         if (_settings?.Prizes == null)
         {
-            return [];
+            throw new InvalidOperationException("PrizeSettings or its Prizes property is not properly configured.");
         }
         return _settings.Prizes;
     }
