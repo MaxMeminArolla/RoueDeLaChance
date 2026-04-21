@@ -1,5 +1,5 @@
 #!/bin/bash
-cd RoueDeLaChance
+cd ~/RoueDeLaChance
 git pull origin main
 docker stop MaRoue ; docker rm MaRoue
 docker build -t roue-chance .
