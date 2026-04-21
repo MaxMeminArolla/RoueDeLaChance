@@ -209,27 +209,6 @@ async function doSpin() {
         console.error(err);
     }
 }
-async function loadHistory() {
-    try {
-        const res = await fetch("/history");
-        if (!res.ok)
-            return;
-        const entries = await res.json();
-        const historyList = document.getElementById("history-list");
-        if (!historyList)
-            return;
-        historyList.innerHTML = "";
-        for (const entry of entries) {
-            const li = document.createElement("li");
-            const icon = entry.isWin ? "🎉" : "❌";
-            li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
-            historyList.appendChild(li);
-        }
-    }
-    catch (err) {
-        console.error("Erreur chargement historique:", err);
-    }
-}
 async function loadAndDraw() {
     try {
         if (footer)
