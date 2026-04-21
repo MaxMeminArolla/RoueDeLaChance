@@ -7,7 +7,7 @@ async function fetchPrizes() {
     if (!res.ok)
         throw new Error(`Problème lors de la récupération des lots: ${res.status}`);
     const arr = await res.json();
-    return (arr || []).map((p, i) => {
+    const prizes = (arr || []).map((p, i) => {
         var _a, _b, _c, _d, _e;
         return ({
             name: ((_b = (_a = p.name) !== null && _a !== void 0 ? _a : p.Name) !== null && _b !== void 0 ? _b : `Lot ${i + 1}`),
@@ -15,6 +15,36 @@ async function fetchPrizes() {
             color: (_e = p.color) !== null && _e !== void 0 ? _e : AROLLA_PALETTE[i % AROLLA_PALETTE.length]
         });
     });
+    // Validation de la somme des probabilités
+    const total = prizes.reduce((sum, p) => sum + p.probability, 0);
+    if (Math.abs(total - 1) > 0.0001) {
+        showToast(`Attention: La somme des probabilités est de ${total.toFixed(4)} au lieu de 1.0000`, 'error');
+    }
+    return prizes;
+}
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = document.createElement('span');
+    icon.textContent = type === 'error' ? '⚠️' : '✅';
+    const text = document.createElement('span');
+    text.textContent = message;
+    toast.appendChild(icon);
+    toast.appendChild(text);
+    container.appendChild(toast);
+    // Auto-suppression après 5 secondes
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        });
+    }, 5000);
 }
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
@@ -119,6 +149,27 @@ function computeRotationForSlice(s, startFrom) {
     const diff = (desiredMod - currentMod + 360) % 360;
     return startFrom + (5 * 360) + diff;
 }
+async function loadHistory() {
+    try {
+        const res = await fetch("/history");
+        if (!res.ok)
+            return;
+        const entries = await res.json();
+        const historyList = document.getElementById("history-list");
+        if (!historyList)
+            return;
+        historyList.innerHTML = "";
+        for (const entry of entries) {
+            const li = document.createElement("li");
+            const icon = entry.isWin ? "🎉" : "❌";
+            li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
+            historyList.appendChild(li);
+        }
+    }
+    catch (err) {
+        console.error("Erreur chargement historique:", err);
+    }
+}
 async function doSpin() {
     var _a, _b, _c, _d, _e, _f;
     if (spinBtn.disabled)
@@ -140,24 +191,14 @@ async function doSpin() {
         currentRotation = rotationTarget;
         canvas.style.transition = "transform 5s cubic-bezier(0.1, 0.9, 0, 1)";
         canvas.style.transform = `rotate(${currentRotation}deg)`;
-        const onEnd = () => {
+        const onEnd = async () => {
             canvas.removeEventListener("transitionend", onEnd);
             const displayName = prizeName ? prizeName : isWin ? "Gagné" : "Perdu";
             resultDiv.textContent = isWin
                 ? `🎉 Vous avez gagné : ${displayName}`
                 : `❌ Résultat : ${displayName}`;
-            const historyList = document.getElementById("history-list");
-            if (historyList) {
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('fr-FR');
-                const h = now.getHours().toString().padStart(2, '0');
-                const m = now.getMinutes().toString().padStart(2, '0');
-                const s = now.getSeconds().toString().padStart(2, '0');
-                const timeString = `${dateStr} ${h}h${m} et ${s}s`;
-                const li = document.createElement("li");
-                li.textContent = `${timeString}: résultat: ${displayName}`;
-                historyList.prepend(li);
-            }
+            // Rafraîchit l'historique complet depuis le serveur (source de vérité partagée)
+            await loadHistory();
             spinBtn.disabled = false;
             loadAndDraw();
         };
@@ -176,6 +217,7 @@ async function loadAndDraw() {
         const prizes = await fetchPrizes();
         resizeCanvas();
         drawWheel(prizes);
+        await loadHistory();
     }
     catch (err) {
         resultDiv.textContent = "❌ Erreur lors du chargement.";
