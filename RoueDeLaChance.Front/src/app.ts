@@ -14,11 +14,49 @@ async function fetchPrizes(): Promise<Prize[]> {
   const res = await fetch("/prizes");
   if (!res.ok) throw new Error(`Problème lors de la récupération des lots: ${res.status}`);
   const arr = await res.json();
-  return (arr || []).map((p: any, i: number) => ({
+  const prizes = (arr || []).map((p: any, i: number) => ({
     name: (p.name ?? p.Name ?? `Lot ${i + 1}`) as string,
     probability: Number(p.probability ?? p.Probability ?? 0),
     color: p.color ?? AROLLA_PALETTE[i % AROLLA_PALETTE.length]
   }));
+
+  // Validation de la somme des probabilités
+  const total = prizes.reduce((sum: number, p: Prize) => sum + p.probability, 0);
+  if (Math.abs(total - 1) > 0.0001) {
+    showToast(`Attention: La somme des probabilités est de ${total.toFixed(4)} au lieu de 1.0000`, 'error');
+  }
+
+  return prizes;
+}
+
+function showToast(message: string, type: 'error' | 'success' = 'success'): void {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  const icon = document.createElement('span');
+  icon.textContent = type === 'error' ? '⚠️' : '✅';
+
+  const text = document.createElement('span');
+  text.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  container.appendChild(toast);
+
+  // Auto-suppression après 5 secondes
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, 5000);
 }
 
 interface SliceMeta {
@@ -151,6 +189,27 @@ function computeRotationForSlice(s: SliceMeta, startFrom: number): number {
   return startFrom + (5 * 360) + diff;
 }
 
+async function loadHistory(): Promise<void> {
+  try {
+    const res = await fetch("/history");
+    if (!res.ok) return;
+    const entries: { prizeName: string; isWin: boolean; spunAt: string }[] = await res.json();
+
+    const historyList = document.getElementById("history-list");
+    if (!historyList) return;
+
+    historyList.innerHTML = "";
+    for (const entry of entries) {
+      const li = document.createElement("li");
+      const icon = entry.isWin ? "🎉" : "❌";
+      li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
+      historyList.appendChild(li);
+    }
+  } catch (err) {
+    console.error("Erreur chargement historique:", err);
+  }
+}
+
 async function doSpin(): Promise<void> {
   if (spinBtn.disabled) return;
   spinBtn.disabled = true;
@@ -181,10 +240,10 @@ async function doSpin(): Promise<void> {
       resultDiv.textContent = isWin
         ? `🎉 Vous avez gagné : ${displayName}`
         : `❌ Résultat : ${displayName}`;
-        
+
       // Rafraîchit l'historique complet depuis le serveur (source de vérité partagée)
       await loadHistory();
-      
+
       spinBtn.disabled = false;
     };
     canvas.addEventListener("transitionend", onEnd, { once: true });
@@ -192,27 +251,6 @@ async function doSpin(): Promise<void> {
     resultDiv.textContent = "❌ Erreur lors du tirage.";
     spinBtn.disabled = false;
     console.error(err);
-  }
-}
-
-async function loadHistory(): Promise<void> {
-  try {
-    const res = await fetch("/history");
-    if (!res.ok) return;
-    const entries: { prizeName: string; isWin: boolean; spunAt: string }[] = await res.json();
-
-    const historyList = document.getElementById("history-list");
-    if (!historyList) return;
-
-    historyList.innerHTML = "";
-    for (const entry of entries) {
-      const li = document.createElement("li");
-      const icon = entry.isWin ? "🎉" : "❌";
-      li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
-      historyList.appendChild(li);
-    }
-  } catch (err) {
-    console.error("Erreur chargement historique:", err);
   }
 }
 
