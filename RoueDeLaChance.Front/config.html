@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Configuration de la Roue</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .config-container {
+      padding: 20px;
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      padding: 5px;
+      width: 90%;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #0b3d91;
+      color: white;
+      display: inline-block;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      background: #e94b35;
+      font-size: 1em;
+    }
+
+    .btn-success {
+      background: #6ab04c;
+      width: 100%;
+      font-size: 1.1em;
+      padding: 16px;
+      transition: 0.3s;
+    }
+
+    .btn-success:not(:disabled):hover {
+      background: #5a903c;
+    }
+
+    .color-preview {
+      width: 24px;
+      height: 24px;
+      display: inline-block;
+      vertical-align: middle;
+      border: 1px solid #000;
+      margin-left: 5px;
+      border-radius: 4px;
+    }
+
+    #totalProb {
+      font-weight: bold;
+      font-size: 1.2em;
+      text-align: right;
+    }
+
+    .badge-error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    a.btn-back {
+      display: inline-block;
+      margin-bottom: 20px;
+      background: #555;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="config-container">
+    <a href="/" class="btn btn-back">⬅️ Retour à la roue</a>
+    <h1>⚙️ Éditeur de Lots</h1>
+    <div id="probError" class="badge-error">⚠️ La somme des probabilités doit être exactement égale à 1.000 !</div>
+
+    <table id="prizesTable">
+      <thead>
+        <tr>
+          <th width="40%">Titre lot</th>
+          <th width="20%">Probabilité</th>
+          <th width="30%">Couleur Arolla</th>
+          <th width="10%">Action</th>
+        </tr>
+      </thead>
+      <tbody id="prizesBody"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <button class="btn" id="addBtn">+ Ajouter un lot</button>
+      <div id="totalProb">Somme: 1.000</div>
+    </div>
+
+    <button class="btn btn-success" id="saveBtn">💾 Sauvegarder dans appsettings.json</button>
+
+    <div id="statusMsg" style="margin-top: 15px; text-align: center; font-weight: bold; min-height: 20px;"></div>
+  </div>
+  <script type="module" src="./js/config.js"></script>
+</body>
+
+</html>

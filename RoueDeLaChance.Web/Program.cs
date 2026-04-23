@@ -28,6 +28,49 @@ app.MapGet("/prizes", (IPrizeProvider prizeProvider) =>
     return Results.Ok(prizes);
 });
 
+app.MapPost("/config/prizes", async (List<Prize> newPrizes) =>
+{
+    if (newPrizes == null || newPrizes.Count == 0) return Results.BadRequest("Liste invalide");
+    if (Math.Abs(newPrizes.Sum(p => p.Probability) - 1.0) > 0.0001) return Results.BadRequest("La somme doit faire exactement 1.");
+    if (newPrizes.Any(p => p.Name?.Length > 100)) return Results.BadRequest("Un titre dépasse 100 caractères.");
+
+    // Modifier le fichier source racine
+    var sourceJson = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+    if (!File.Exists(sourceJson)) return Results.NotFound("appsettings.json introuvable.");
+
+    var json = await File.ReadAllTextAsync(sourceJson);
+    var node = System.Text.Json.Nodes.JsonNode.Parse(json);
+    if (node?["PrizeSettings"] is System.Text.Json.Nodes.JsonObject prizeSettings)
+    {
+        var array = new System.Text.Json.Nodes.JsonArray();
+        foreach (var p in newPrizes)
+        {
+            array.Add(new System.Text.Json.Nodes.JsonObject
+            {
+                ["name"] = p.Name ?? "Lot",
+                ["probability"] = p.Probability,
+                ["color"] = p.Color ?? "#92DF36"
+            });
+        }
+        prizeSettings["Prizes"] = array;
+
+        var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+        var newJsonContent = node.ToJsonString(options);
+        
+        await File.WriteAllTextAsync(sourceJson, newJsonContent);
+
+        // Modifier le fichier copié dans le dossier bin pour déclencher le IOptionsMonitor sans redémarrer
+        var binJson = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        if (File.Exists(binJson) && binJson != sourceJson)
+        {
+            await File.WriteAllTextAsync(binJson, newJsonContent);
+        }
+
+        return Results.Ok();
+    }
+    return Results.BadRequest("Structure json invalide dans appsettings.json");
+});
+
 app.MapPost("/spin", async (SpinRequest request, WheelEngine engine, IPrizeProvider prizeProvider, ISpinHistoryService history) =>
 {
     var prizes = prizeProvider.GetPrizes();

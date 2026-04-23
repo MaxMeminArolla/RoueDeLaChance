@@ -9,11 +9,17 @@ if (!fs.existsSync(destDir)) {
   fs.mkdirSync(destDir, { recursive: true });
 }
 
-// Copy index.html
+// Copy HTML files
 fs.copyFileSync(
   path.join(srcDir, "index.html"),
   path.join(destDir, "index.html")
 );
+if (fs.existsSync(path.join(srcDir, "config.html"))) {
+  fs.copyFileSync(
+    path.join(srcDir, "config.html"),
+    path.join(destDir, "config.html")
+  );
+}
 
 // Copy css directory
 const cssSrcDir = path.join(srcDir, "css");
