@@ -57,21 +57,16 @@ namespace RoueDeLaChance.Core
         private static double ComputeTargetAngle(IList<Prize> prizes, int prizeIndex)
         {
             const double pointerAngle = 270;
-            var total = prizes.Sum(p => p.Probability);
-            if (total <= 0)
-                total = prizes.Count;
-
+            
+            // Les parts visuelles Front sont maintenant toutes de taille équidistante
+            var sweep = 360.0 / prizes.Count;
             var cumulative = 0.0;
+
             for (int i = 0; i < prizes.Count; i++)
             {
-                var sweep = (prizes[i].Probability / total) * 360;
-                if (double.IsNaN(sweep) || sweep <= 0)
-                {
-                    sweep = 360.0 / prizes.Count;
-                }
-
                 if (i == prizeIndex)
                 {
+                    // L'angle cible est le milieu de la part
                     var center = cumulative + sweep / 2;
                     var angle = ((pointerAngle - center) % 360 + 360) % 360;
                     return angle;
@@ -80,7 +75,6 @@ namespace RoueDeLaChance.Core
                 cumulative += sweep;
             }
 
-            // Default Perdu if index invalid
             return pointerAngle;
         }
     }

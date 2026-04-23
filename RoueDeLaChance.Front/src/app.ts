@@ -244,7 +244,7 @@ async function doSpin(): Promise<void> {
 
   try {
     const email = emailInput.value.trim();
-    const res = await fetch("/spin", { 
+    const res = await fetch("/spin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
@@ -254,10 +254,17 @@ async function doSpin(): Promise<void> {
     const json = await res.json();
     const isWin = json.isWin ?? json.IsWin ?? (json.prizeName ?? json.PrizeName ? true : false);
     const prizeName = String(json.prizeName ?? json.PrizeName ?? json.prize ?? "");
+    const prizeIndex = json.prizeIndex ?? json.PrizeIndex;
 
-    const slice = findSliceByName(prizeName);
+    // IMPORTANT: Utiliser l'index pour différencier les multiples lots "Perdu" identiques
+    let slice = undefined;
+    if (prizeIndex !== undefined && prizeIndex >= 0 && prizeIndex < slices.length) {
+      slice = slices[prizeIndex];
+    } else {
+      slice = findSliceByName(prizeName);
+    }
+
     let rotationTarget = currentRotation + (360 * 5) + Math.random() * 360;
-
     if (slice) {
       rotationTarget = computeRotationForSlice(slice, currentRotation);
     }
