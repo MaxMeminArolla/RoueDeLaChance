@@ -72,9 +72,11 @@ const spinBtn = document.getElementById("spinBtn") as HTMLButtonElement;
 const emailInput = document.getElementById("emailInput") as HTMLInputElement;
 const resultDiv = document.getElementById("result")!;
 const footer = document.getElementById("footer")!;
+const showLosersToggle = document.getElementById("showLosersToggle") as HTMLInputElement | null;
 let slices: SliceMeta[] = [];
 let currentRotation = 0;
 let cachedPrizes: Prize[] = [];
+let currentHistoryEntries: { prizeName: string; isWin: boolean; spunAt: string }[] = [];
 
 function degToRad(d: number): number {
   return (d * Math.PI) / 180;
@@ -213,25 +215,31 @@ async function updateCounters(entries: { prizeName: string; isWin: boolean }[]):
   }
 }
 
+function renderHistoryList(): void {
+  const historyList = document.getElementById("history-list");
+  if (!historyList) return;
+
+  historyList.innerHTML = "";
+  const showLosers = showLosersToggle ? showLosersToggle.checked : false;
+
+  for (const entry of currentHistoryEntries) {
+    if (!entry.isWin && !showLosers) continue;
+    const li = document.createElement("li");
+    const icon = entry.isWin ? "🎉" : "❌";
+    li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
+    historyList.appendChild(li);
+  }
+}
+
 async function loadHistory(): Promise<void> {
   try {
     const res = await fetch("/history");
     if (!res.ok) return;
-    const entries: { prizeName: string; isWin: boolean; spunAt: string }[] = await res.json();
+    currentHistoryEntries = await res.json();
 
     // Mise à jour des compteurs
-    await updateCounters(entries);
-
-    const historyList = document.getElementById("history-list");
-    if (!historyList) return;
-
-    historyList.innerHTML = "";
-    for (const entry of entries) {
-      const li = document.createElement("li");
-      const icon = entry.isWin ? "🎉" : "❌";
-      li.textContent = `${entry.spunAt} — ${icon} ${entry.prizeName}`;
-      historyList.appendChild(li);
-    }
+    await updateCounters(currentHistoryEntries);
+    renderHistoryList();
   } catch (err) {
     console.error("Erreur chargement historique:", err);
   }
@@ -320,5 +328,8 @@ function validateEmail(): void {
 window.addEventListener("resize", resizeCanvas);
 spinBtn.addEventListener("click", doSpin);
 emailInput.addEventListener("input", validateEmail);
+if (showLosersToggle) {
+  showLosersToggle.addEventListener("change", renderHistoryList);
+}
 
 loadAndDraw();
