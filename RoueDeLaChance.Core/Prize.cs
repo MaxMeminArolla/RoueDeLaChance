@@ -6,6 +6,8 @@ namespace RoueDeLaChance.Core
         public double Probability { get; set; }
         public string? Color { get; set; }
 
+        public Prize() { }
+
         public Prize(string name, double probability, string? color)
         {
             Name = name;
