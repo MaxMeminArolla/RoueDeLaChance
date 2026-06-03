@@ -3,17 +3,13 @@
 ################################################################################
 
 /.vs
-/RoueDeLaChance.Core/bin/Debug/net10.0
+/RoueDeLaChance.Core/bin
 /RoueDeLaChance.Core/obj
-/RoueDeLaChance.Tests/bin/Debug/net10.0
+/RoueDeLaChance.Front/bin
+/RoueDeLaChance.Front/obj
+/RoueDeLaChance.Tests/bin
 /RoueDeLaChance.Tests/obj
-/RoueDeLaChance.Web/bin/Debug/net10.0
+/RoueDeLaChance.Web/bin
 /RoueDeLaChance.Web/obj
-/RoueDeLaChance.Front/bin/Debug/net10.0/RoueDeLaChance.Front.dll
-/RoueDeLaChance.Front/bin/Debug/net10.0/RoueDeLaChance.Front.pdb
-/RoueDeLaChance.Front/obj/Debug/net10.0/RoueDeLaChance.Front.dll
-/RoueDeLaChance.Front/obj/Debug/net10.0/RoueDeLaChance.Front.pdb
-/RoueDeLaChance.Front/obj/Debug/net10.0/RoueDeLaChance.Front.sourcelink.json
-RoueDeLaChance.Front/obj/project.nuget.cache
 RoueDeLaChance.Web/wwwroot/
 test_results.txt
